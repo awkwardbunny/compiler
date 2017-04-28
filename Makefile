@@ -1,6 +1,15 @@
-all: lexer
+all: parser
 
 CFLAGS=-I includes -std=gnu99 -lfl
+
+# Parser
+parser: src/parser.tab.c src/lex.yy.c
+	@echo Building lexer + parser...
+	@gcc -o $@ $^ $(CFLAGS)
+
+src/parser.tab.c: src/parser.y
+	@echo Generating parser...
+	@bison -d $< -o src/parser.tab.c --defines=includes/parser.tab.h
 
 # Symbol Table Tests
 .PHONY: symboltests
@@ -17,7 +26,7 @@ lexer: src/lex.yy.c tests/lexer.c
 	@echo Building lexer...
 	@gcc -o $@ $^ $(CFLAGS)
 
-src/lex.yy.c: src/lexer.l includes/tokens-manual.h
+src/lex.yy.c: src/lexer.l
 	@echo Generating lexer...
 	@flex -l -o $@ $<
 
@@ -36,3 +45,7 @@ clean:
 	@rm -f lexer src/lex.yy.c
 	@echo Removing lexer test files...
 	@rm -f tests/ltest.my{out,err}
+	@echo Removing symbols test file...
+	@rm -f symbol
+	@echo Removing parser files...
+	@rm -f parser src/parser.tab.c includes/parser.tab.h

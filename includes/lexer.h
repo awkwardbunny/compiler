@@ -1,6 +1,5 @@
 #ifndef LEXER_H
 #define LEXER_H
-#include <tokens-manual.h>
 
 extern int yylineno;
 extern char filename[];
@@ -33,15 +32,6 @@ struct number {
 struct identifier {
 	char *name;
 };
-
-typedef union {
-	struct string_literal s;
-	struct number n;
-	struct identifier id;
-	unsigned char charlit;
-} YYSTYPE;
-
-extern YYSTYPE yylval;
 
 int yylex(void);
 void yyerror(char *s, ...);

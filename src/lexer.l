@@ -5,7 +5,19 @@
 #include <limits.h>
 #include <lexer.h>
 
+//delete below line for ltests
+#include <parser.tab.h>
+
+#ifndef YY_YY_INCLUDES_PARSER_TAB_H_INCLUDED
+#include <tokens-manual.h>
+typedef union {
+	struct string_literal s;
+	struct number n;
+	struct identifier id;
+	unsigned char charlit;
+} YYSTYPE;
 YYSTYPE yylval;
+#endif
 
 char filename[64] = "<stdin>";
 void mystrcat(char *str, int l);
@@ -142,7 +154,7 @@ int mode = 0;
 			yytext[--yyleng] = '\0';
 			yylval.n.f = strtof(yytext, NULL);
 			if(yylval.n.f == HUGE_VAL)
-				yywarn(strerror(errno));
+				yywarn("Value too large. %s", strerror(errno));
 			yylval.n.type = NT_FP;
 			break;
 		case 'l':
@@ -150,13 +162,13 @@ int mode = 0;
 			yytext[--yyleng] = '\0';
 			yylval.n.ld = strtold(yytext, NULL);
 			if(yylval.n.ld == HUGE_VAL)
-				yywarn(strerror(errno));
+				yywarn("Value too large. %s", strerror(errno));
 			yylval.n.type = NT_LDBL;
 			break;
 		default:
 			yylval.n.d = strtod(yytext, NULL);
 			if(yylval.n.d == HUGE_VAL)
-				yywarn(strerror(errno));
+				yywarn("Value too large. %s", strerror(errno));
 			yylval.n.type = NT_DBL;
 	}
 	return NUMBER;
@@ -173,13 +185,13 @@ L?\' {
 	if(!yylval.charlit)
 		yylval.charlit = yytext[0];
 	if(yyleng > 1)
-		yywarn("Unsupported multibyte character literal truncated to first byte\n");
+		yywarn("Unsupported multibyte character literal truncated to first byte");
 }
 <SC_CHAR>\\ {
 	BEGIN(SC_ESC);
 }
 <SC_CHAR>\n {
-	yyerror("Unexpected newline\n");
+	yyerror("Unexpected newline");
 	exit(-1);
 }
 <SC_CHAR>\' {
@@ -202,7 +214,7 @@ L?\" {
 	BEGIN(SC_ESC);
 }
 <SC_STR>\n {
-	yyerror("Unexpected newline\n");
+	yyerror("Unexpected newline");
 	exit(-1);
 }
 <SC_STR>\" {
@@ -244,7 +256,7 @@ L?\" {
 <SC_ESC>[0-7]{1,3} {
 	long int l = strtol(yytext, NULL, 8);
 	if(l == LONG_MIN || l == LONG_MAX){
-		yywarn(strerror(errno));
+		yywarn("Value too large. %s", strerror(errno));
 	}
 	char o = (char)l;
 	switch(mode){
@@ -263,7 +275,7 @@ L?\" {
 	long int l = strtol(yytext+1, NULL, 16);
 	unsigned char h = (unsigned char)l;
 	if(l > 0xff){
-		yywarn("Hex escape sequence \\%s out of range\n", yytext);
+		yywarn("Hex escape sequence \\%s out of range", yytext);
 		h = 0xff;
 	}
 	switch(mode){
@@ -285,7 +297,7 @@ void mystrcat(char *str, int l){
 	if(yylval.s.length){
 		char *new = (char *)realloc(yylval.s.characters, yylval.s.length+l);
 		if(!new){
-			yyerror("Error: realloc failed in mystrcat()! %s\n", strerror(errno));
+			yyerror("Error: realloc failed in mystrcat()! %s", strerror(errno));
 			exit(-1);
 		}
 		yylval.s.characters = new;
@@ -311,7 +323,7 @@ void processint(char *str, int len, int base){
 	
 	long long int ll = strtoll(str, NULL, base);
 	if(ll == LLONG_MIN || ll == LLONG_MAX){
-		 yywarn(strerror(errno));
+		 yywarn("Value too large. %s", strerror(errno));
 	}
 
 	if(longs == 1){
@@ -332,6 +344,7 @@ void yyerror(char *s, ...){
 
 	fprintf(stderr, "%s:%d:Error:", filename, yylineno);
 	vfprintf(stderr, s, ap);
+	fprintf(stderr, "\n");
 }
 
 void yywarn(char *s, ...){
@@ -340,4 +353,5 @@ void yywarn(char *s, ...){
 
 	fprintf(stderr, "%s:%d:Warning:", filename, yylineno);
 	vfprintf(stderr, s, ap);
+	fprintf(stderr, "\n");
 }

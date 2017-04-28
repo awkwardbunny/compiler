@@ -1,6 +1,11 @@
 *.swp
 tags
 
+# Parser
+parser.tab.c
+parser.tab.h
+parser
+
 # Symbol test file
 symbol
 

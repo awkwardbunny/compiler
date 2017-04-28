@@ -1,6 +1,15 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <lexer.h>
+#include <tokens-manual.h>
+
+typedef union {
+	struct string_literal s;
+	struct number n;
+	struct identifier id;
+	unsigned char charlit;
+} YYSTYPE;
+extern YYSTYPE yylval;
 
 void printchar(unsigned char cin){
 	char c;
