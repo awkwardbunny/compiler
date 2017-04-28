@@ -19,6 +19,23 @@ int yylex();
 
 %%
 /* From H&S C Ref book */
+translation_unit: top_level_decl
+				| translation_unit top_level_decl
+				;
+top_level_decl: decl
+			  | func_def
+			  ;
+/** Functions **/
+func_def: func_def_spec compound_stmt
+		;
+func_def_spec: decl_specs declarator decl_list
+			 | decl_specs declarator
+			 | declarator decl_list
+			 | declarator
+			 ;
+decl_list: decl
+		 | decl_list decl
+		 ;
 /** Declaration **/
 decl: decl_specs init_declarator_list ';'
 	;
@@ -101,22 +118,22 @@ array_size_expr: assign_expr
                | '*'
                ;
 /*** Function ***/
-func_declarator: direct_declarator '(' parameter_type_list ')'
+func_declarator: direct_declarator '(' param_type_list ')'
                | direct_declarator '(' ident_list ')'
                | direct_declarator '(' ')'
                ;
-parameter_type_list: parameter_list
-                  | parameter_list ',' ELLIPSIS
+param_type_list: param_list
+                  | param_list ',' ELLIPSIS
                   ;
-parameter_list: parameter_decl
-             | parameter_list ',' parameter_decl
+param_list: param_decl
+             | param_list ',' param_decl
              ;
-parameter_decl: decl_specs declarator
+param_decl: decl_specs declarator
              | decl_specs abstract_declarator
              | decl_specs
              ;
 ident_list: IDENT
-          | parameter_list ',' IDENT
+          | param_list ',' IDENT
           ;
 /*** Initializer ***/
 initializer: assign_expr
@@ -258,7 +275,7 @@ direct_abstract_declarator: '(' abstract_declarator ')'
                         | '[' expr ']'
                         | direct_abstract_declarator '[' '*' ']'
                         | '[' '*' ']'
-                        | direct_abstract_declarator '(' parameter_type_list ')'
+                        | direct_abstract_declarator '(' param_type_list ')'
                         | direct_abstract_declarator '(' ')'
                         ;
 /** Expressions **/
