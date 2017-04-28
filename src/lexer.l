@@ -32,7 +32,7 @@ int mode = 0;
 %%
 
  /* LINE NUMBERS */
-#[ ][0-9]+[ ]\"[^ \"]+\"([ ][1-4])*\n { sscanf(yytext, "# %d \"%62[^\"]+\"", &yylineno, filename); }
+#[ ]?[0-9]+[ ]\"[^ \"]+\"([ ][1-4])*\n { sscanf(yytext, "# %d \"%62[^\"]+\"", &yylineno, filename); }
 \n                                    { }
 
  /* WHITESPACES */

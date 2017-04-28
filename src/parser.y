@@ -4,6 +4,7 @@
 #include <symbol.h>
 
 int yylex();
+void exprprint(int);
 %}
 
 %union {
@@ -13,7 +14,8 @@ int yylex();
 	unsigned char charlit;
 }
 
-%type<id.name> IDENT
+%type<id.name> IDENT simple_declarator direct_declarator declarator init_declarator
+%type<n.i> primary_expr postfix_expr unary_expr predec_expr assign_expr comma_expr expr
 
 %token TOKEOF IDENT CHARLIT STRING NUMBER INDSEL PLUSPLUS MINUSMINUS SHL SHR LTEQ GTEQ EQEQ NOTEQ LOGAND LOGOR ELLIPSIS TIMESEQ DIVEQ MODEQ PLUSEQ MINUSEQ SHLEQ SHREQ ANDEQ OREQ XOREQ AUTO BREAK CASE CHAR CONST CONTINUE DEFAULT DO DOUBLE ELSE ENUM EXTERN FLOAT FOR GOTO IF INLINE INT LONG REGISTER RESTRICT RETURN SHORT SIGNED SIZEOF STATIC STRUCT SWITCH TYPEDEF UNION UNSIGNED VOID VOLATILE WHILE _BOOL _COMPLEX _IMAGINARY
 
@@ -51,11 +53,11 @@ decl_specs: storage_class_spec decl_specs
 		  | func_spec decl_specs
 		  | func_spec
 		  ;
-init_declarator_list: init_declarator
-					| init_declarator_list ',' init_declarator
+init_declarator_list: init_declarator { new_sym($1, NS_NAME, 0); }
+					| init_declarator_list ',' init_declarator { new_sym($3, NS_NAME, 0); }
 					;
 init_declarator: declarator
-			   | declarator '=' initializer
+			   | declarator '=' initializer { yywarn("Initializer not supported!"); }
 			   ;
 storage_class_spec: AUTO
 				  | EXTERN
@@ -255,7 +257,7 @@ direct_abstract_declarator: '(' abstract_declarator ')'
                         | direct_abstract_declarator '(' ')'
                         ;
 /** Expressions **/
-primary_expr: IDENT
+primary_expr: IDENT { int *a = get_sym($1, NS_NAME); if(a) $$=*a; else $$=0; }
            | NUMBER
            | paren_expr
            ;
@@ -322,7 +324,7 @@ indirect_expr: '*' cast_expr
              ;
 preinc_expr: PLUSPLUS unary_expr
            ;
-predec_expr: MINUSMINUS unary_expr
+predec_expr: MINUSMINUS unary_expr { $$ = $2-1 }
            ;
 mult_expr: cast_expr
          | mult_expr mult_op cast_expr
@@ -376,7 +378,7 @@ cond_expr: log_or_expr
          | log_or_expr '?' expr ':' cond_expr
          ;
 assign_expr: cond_expr
-           | unary_expr assign_op assign_expr
+           | unary_expr assign_op assign_expr { $$ = $3; }
            ;
 assign_op: '='
          | PLUSEQ
@@ -391,7 +393,7 @@ assign_op: '='
          | OREQ
          ;
 comma_expr: assign_expr
-          | comma_expr ',' assign_expr
+          | comma_expr ',' assign_expr { $$ = $3; }
           ;
 expr: comma_expr
     ;
@@ -415,7 +417,7 @@ iter_stmt: do_stmt
          | while_stmt
          | for_stmt
          ;
-expr_stmt: expr ';'
+expr_stmt: expr ';' { exprprint($1); }
          ;
 label_stmt: label ':' stmt
           ;
@@ -423,7 +425,7 @@ label: named_label
      | case_label
      | default_label
      ;
-compound_stmt: '{' decl_or_stmt_list '}'
+compound_stmt: '{' { new_scope(); } decl_or_stmt_list '}' { exit_scope(); }
              | '{' '}'
              ;
 decl_or_stmt_list: decl_or_stmt
@@ -474,6 +476,10 @@ named_label: IDENT
 null_stmt: ';'
          ;
 %%
+
+void exprprint(int val){
+	printf("%s:%d: exprval=%d\n", filename, yylineno, val);
+}
 
 int main(){
 	init_sym_table();

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <symbol.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 void init_sym_table(){
 	global = (struct scope *)malloc(sizeof(struct scope));

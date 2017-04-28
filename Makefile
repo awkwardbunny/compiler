@@ -6,7 +6,7 @@ CFLAGS=-I includes -std=gnu99 -lfl
 .PHONY: ptests
 ptests: parser
 	@echo Running parser tests...
-	@cat tests/ptest.c | ./$<
+	@gcc -E tests/ptest.c | ./$<
 
 # Parser
 parser: src/parser.tab.c src/lex.yy.c src/symbol.c
