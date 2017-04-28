@@ -1,6 +1,9 @@
 *.swp
 tags
 
+# Symbol test file
+symbol
+
 # Lexer output files
 lex.yy.c
 lexer

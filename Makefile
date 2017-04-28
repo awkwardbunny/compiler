@@ -2,6 +2,16 @@ all: lexer
 
 CFLAGS=-I includes -std=gnu99 -lfl
 
+# Symbol Table Tests
+.PHONY: symboltests
+symboltests: symbol
+	@echo Running symbol table test...
+	@./$^
+
+symbol: src/symbol.c tests/symbol.c
+	@echo Building symbol table test...
+	@gcc -o $@ $^ $(CFLAGS)
+
 # Lexer
 lexer: src/lex.yy.c tests/lexer.c
 	@echo Building lexer...
