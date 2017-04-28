@@ -1,0 +1,10 @@
+*.swp
+tags
+
+# Lexer output files
+lex.yy.c
+lexer
+
+# Lexer test files
+tests/ltest.myerr
+tests/ltest.myout
