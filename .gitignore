@@ -4,6 +4,7 @@ tags
 # Parser
 parser.tab.c
 parser.tab.h
+parser.output
 parser
 
 # Symbol test file

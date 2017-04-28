@@ -1,0 +1,2 @@
+#!/bin/zsh
+cat src/parser.y | awk '/%%/{if(flag==0){flag=1}else{flag=0}; next} {gsub(/\t/,"    ")} flag;' | lp -d endowmentlow

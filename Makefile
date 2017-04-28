@@ -15,7 +15,7 @@ parser: src/parser.tab.c src/lex.yy.c src/symbol.c
 
 src/parser.tab.c: src/parser.y
 	@echo Generating parser...
-	@bison -d $< -o src/parser.tab.c --defines=includes/parser.tab.h
+	@bison -d $< -o src/parser.tab.c --defines=includes/parser.tab.h -v
 
 # Symbol Table Tests
 .PHONY: symboltests

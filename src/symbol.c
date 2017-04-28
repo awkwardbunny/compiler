@@ -5,8 +5,6 @@
 
 #define DEBUG 1
 
-/* TODO Should char * be copied over to a malloc'd buffer? */
-
 void init_sym_table(){
 	global = (struct scope *)malloc(sizeof(struct scope));
 	global->parent = NULL;
@@ -46,7 +44,8 @@ int *get_sym(char *n, int ns){
 				return &(cs->value);
 		}
 	}
-	return 0;
+	yyerror("Identifier %s has not been declared.", n);
+	return NULL;
 }
 
 void new_scope(){
