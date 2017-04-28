@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <symbol.h>
 
+#define DEBUG 1
+
 /* TODO Should char * be copied over to a malloc'd buffer? */
 
 void init_sym_table(){
@@ -14,7 +16,9 @@ void init_sym_table(){
 }
 
 void new_sym(char *n, int ns, int val){
+#if DEBUG
 	printf("Adding symbol: %d %s\t%d\n", ns, n, val);
+#endif
 	struct sym **spp;
 	for(spp = &(current->table); *spp; spp = &((*spp)->next)){
 		if(!strcmp((*spp)->name, n)){
@@ -47,7 +51,9 @@ int *get_sym(char *n, int ns){
 }
 
 void new_scope(char *sname){
+#if DEBUG
 	printf("New scope %s\n", sname);
+#endif
 	current->child = (struct scope *)malloc(sizeof(struct scope));
 	current->child->parent = current;
 	current = current->child;
@@ -58,7 +64,9 @@ void new_scope(char *sname){
 }
 
 void exit_scope(){
+#if DEBUG
 	printf("Exiting scope %s\n", current->name);
+#endif
 	struct sym *cs = current->table;
 	while(cs){
 		struct sym *ns = cs->next;

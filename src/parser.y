@@ -21,9 +21,37 @@ int yylex();
 
 prog: decl
 	| prog decl
+	| func
+	| prog func
 	;
 
-decl: INT IDENT ';' { new_sym($2, NS_NAME, 0); print_table(); }
+/* Declaration */
+decl: INT ident_list ';' { }
+	;
+
+ident_list: IDENT { new_sym($1, 0, NS_NAME); }
+		  | ident_list ',' IDENT { new_sym($3, 0, NS_NAME); }
+		  ;
+
+/* Functions */
+/* TODO Empty code blocks? */
+func: IDENT '(' ')' code_block
+	;
+
+func_lines: func_line
+		  | func_lines func_line
+		  ;
+
+func_line: decl
+		 | stmt
+		 | code_block
+		 ;
+
+code_block: '{' { new_scope(""); } func_lines '}' { exit_scope(); } ;
+
+/* Statements */
+/* TODO Add expressions and print value with filename and lineno */
+stmt: IDENT '+' IDENT ';' { printf("STATEMENT\n"); }
 	;
 
 %%
