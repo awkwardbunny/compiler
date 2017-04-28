@@ -47,7 +47,7 @@ func_line: decl
 		 | code_block
 		 ;
 
-code_block: '{' { new_scope(""); } func_lines '}' { exit_scope(); } ;
+code_block: '{' { new_scope(); } func_lines '}' { exit_scope(); } ;
 
 /* Statements */
 /* TODO Add expressions and print value with filename and lineno */

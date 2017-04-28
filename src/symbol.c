@@ -9,7 +9,6 @@
 
 void init_sym_table(){
 	global = (struct scope *)malloc(sizeof(struct scope));
-	global->name = "GLOBAL";
 	global->parent = NULL;
 	global->child = NULL;
 	current = global;
@@ -50,22 +49,21 @@ int *get_sym(char *n, int ns){
 	return 0;
 }
 
-void new_scope(char *sname){
+void new_scope(){
 #if DEBUG
-	printf("New scope %s\n", sname);
+	printf("New scope\n");
 #endif
 	current->child = (struct scope *)malloc(sizeof(struct scope));
 	current->child->parent = current;
 	current = current->child;
 
-	current->name = sname;
 	current->child = NULL;
 	current->table = NULL;
 }
 
 void exit_scope(){
 #if DEBUG
-	printf("Exiting scope %s\n", current->name);
+	printf("Exiting scope\n");
 #endif
 	struct sym *cs = current->table;
 	while(cs){
@@ -87,8 +85,9 @@ void exit_scope(){
 void print_table(){
 	struct scope *csc;
 	struct sym *cs;
+	int i = 0;
 	for(csc = global; csc; csc = csc->child){
-		printf("%s: ", csc->name);
+		printf("%d: ", i++);
 		for(cs = csc->table; cs; cs = cs->next){
 			printf("(%s:%d:%s) ", cs->name, cs->value, (cs->ns ==NS_NAME)?"NAME":(cs->ns==NS_TAGS)?"TAG":(cs->ns==NS_MEMB)?"MEMB":"LABEL");
 		}

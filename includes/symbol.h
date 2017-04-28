@@ -9,7 +9,6 @@
 struct scope {
 	struct scope *parent;
 	struct scope *child;
-	char *name;
 	struct sym *table;
 };
 
@@ -25,7 +24,7 @@ struct scope *global, *current;
 void init_sym_table();
 void new_sym(char *, int, int);
 int *get_sym(char *, int);
-void new_scope(char *);
+void new_scope();
 void exit_scope();
 void print_table();
 
