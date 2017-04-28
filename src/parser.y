@@ -60,12 +60,8 @@ storage_class_spec: AUTO
 				  | STATIC
 				  | TYPEDEF
 				  ;
-type_spec: enum_type_spec
+type_spec: int_type_spec 
 		 | flpt_type_spec
-		 | int_type_spec
-		 | struct_type_spec
-		 | typedef_name
-		 | union_type_spec
 		 | void_type_spec
 		 ;
 type_qual: CONST
@@ -199,68 +195,8 @@ complx_type_spec: FLOAT _COMPLEX
                 | DOUBLE _COMPLEX
                 | LONG DOUBLE _COMPLEX
                 ;
-enum_type_spec: enum_type_def
-              | enum_type_ref
-              ;
-enum_type_def: ENUM enum_tag '{' enum_def_list '}'
-             | ENUM '{' enum_def_list '}'
-             | ENUM enum_tag '{' enum_def_list ',' '}'
-             | ENUM '{' enum_def_list ',' '}'
-             ;
-enum_type_ref: ENUM enum_tag
-             ;
-enum_tag: IDENT
-        ;
-enum_def_list: enum_const_def
-             | enum_def_list ',' enum_const_def
-             ;
-enum_const_def: enum_const
-              | enum_const '=' expr
-              ;
-enum_const: IDENT
-          ;
-struct_type_spec: struct_type_def
-                | struct_type_ref
-                ;
-struct_type_def: STRUCT struct_tag '{' field_list '}'
-               | STRUCT '{' field_list '}'
-               ;
-struct_type_ref: STRUCT struct_tag
-               ;
-struct_tag: IDENT
-          ;
-field_list: component_decl
-          | field_list component_decl
-          ;
-component_decl: type_spec component_declarator_list ';'
-              ;
-component_declarator_list: component_declarator
-                         | component_declarator_list ',' component_declarator
-                         ;
-component_declarator: simple_component
-                    | bit_field
-                    ;
-simple_component: declarator
-                ;
-bit_field: declarator ':' width
-         | ':' width
-         ;
-width: const_expr
-     ;
-union_type_spec: union_type_def
-               | union_type_ref
-               ;
-union_type_def: UNION union_tag '{' field_list '}'
-              | UNION '{' field_list '}'
-              ;
-union_type_ref: UNION union_tag
-              ;
-union_tag: IDENT
-         ;
 void_type_spec: VOID
               ;
-typedef_name: IDENT
-            ;
 type_name: decl_specs abstract_declarator
          | decl_specs
          ;
