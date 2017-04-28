@@ -2,8 +2,14 @@ all: parser
 
 CFLAGS=-I includes -std=gnu99 -lfl
 
+# Parser Tests
+.PHONY: ptests
+ptests: parser
+	@echo Running parser tests...
+	@cat tests/ptest.c | ./$<
+
 # Parser
-parser: src/parser.tab.c src/lex.yy.c
+parser: src/parser.tab.c src/lex.yy.c src/symbol.c
 	@echo Building lexer + parser...
 	@gcc -o $@ $^ $(CFLAGS)
 

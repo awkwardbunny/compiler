@@ -18,7 +18,7 @@ void new_sym(char *n, int ns, int val){
 	struct sym **spp;
 	for(spp = &(current->table); *spp; spp = &((*spp)->next)){
 		if(!strcmp((*spp)->name, n)){
-			yyerror("Identifier already declared! Ignoring.\n");
+			yyerror("Identifier already declared! Ignoring.");
 			return;
 		}
 	}
@@ -67,7 +67,7 @@ void exit_scope(){
 	}
 
 	if(current==global){
-		yyerror("Currently in global scope. Cannot exit. Ignoring.\n");
+		yyerror("Currently in global scope. Cannot exit. Ignoring.");
 		return;
 	}
 
