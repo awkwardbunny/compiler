@@ -16,10 +16,10 @@ enum scope_type{
 };
 
 enum node_type {
-	NODE_IDENT=1
+	NODE_VAR=1
 };
 
-struct node_ident {
+struct node_var {
 	enum namespace_type type;
 	char *name;
 	char *filename;
@@ -30,12 +30,13 @@ struct ast_node {
 	enum node_type type;
 	struct ast_node *next;
 	union {
-		struct node_ident ident;
+		struct node_var var;
 	} u;
 };
 
 struct ast_node *ast;
 
 struct ast_node *new_node(enum node_type);
-void add_node(struct ast_node *, struct ast_node *);
+struct ast_node *add_node(struct ast_node *, struct ast_node *);
+void print_ast(struct ast_node *, int);
 #endif

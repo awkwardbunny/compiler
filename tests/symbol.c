@@ -22,9 +22,14 @@ int main(){
 	printf("--%d--\n", a);
 	print_table(global);
 
-	struct ast_node *b = new_node(NODE_IDENT);
-	set_node(global, "var2", NS_NAME, b);
+	struct ast_node *b = new_node(NODE_VAR);
+	ast = add_node(ast, b);
+	b->u.var.name = "var1";
+	b->u.var.filename = "file1.c";
+	b->u.var.lineno = 4;
+	set_node(global, "var1", NS_NAME, b);
 	struct ast_node *c = get_node(global, "var1", NS_NAME);
+	print_ast(ast, 0);
 }
 
 void yyerror(char *s, ...){
