@@ -5,23 +5,17 @@
 int main(){
 	init_sym_table();
 	new_sym("i", NS_NAME, 3);
-	new_sym("k", NS_TAGS, 43);
-	new_sym("j", NS_MEMB, -21);
-	new_sym("j", NS_MEMB, 21);
-	new_scope("f");
-	print_table();
-	new_sym("a", NS_LABL, 103);
-	new_scope("g");
-	new_sym("b", NS_NAME, -2);
-	new_scope("");
-	new_sym("variable", NS_NAME, 0);
-	print_table();
-	exit_scope();
-	exit_scope();
-	exit_scope();
-	exit_scope();
-	exit_scope();
-	exit_scope();
+	int a = get_sym("i", NS_NAME);
+	set_sym("i", NS_NAME, a+1);
+	a = get_sym("i", NS_NAME);
+	int *b = where_sym("i", NS_NAME);
+	if(b){
+		printf("blah%d\n", *b);
+		*b += 20;
+	}else{
+		printf("bleh\n");
+	}
+	printf("%d\n", a);
 	print_table();
 }
 

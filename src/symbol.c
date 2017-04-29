@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <symbol.h>
 
-#define DEBUG 0
+#define DEBUG 1
 
 void init_sym_table(){
 	global = (struct scope *)malloc(sizeof(struct scope));
@@ -35,16 +35,33 @@ void new_sym(char *n, int ns, int val){
 }
 
 /* TODO Not tested */
-int *get_sym(char *n, int ns){
+void set_sym(char *n, int ns, int val){
+#if DEBUG
+	printf("Setting %s to %d\n", n, val);
+#endif
+	int *sym = where_sym(n, ns);
+	if(sym)
+		*sym = val;
+	else
+		yyerror("Undefined variable %s", n);
+}
+
+int get_sym(char *n, int ns){
+	int *sym = where_sym(n, ns);
+	if(sym)
+		return *sym;
+	yyerror("Undefined variable %s", n);
+	return NULL;
+}
+
+/* TODO Not tested */
+int *where_sym(char *n, int ns){
 	for(struct scope *csc = current; csc; csc = csc->parent){
-		//printf(":%x\n", csc);
 		for(struct sym *cs = csc->table; cs; cs = cs->next){
-			//printf("::%s\n", csym->name);
 			if(ns == cs->ns && !strcmp(n, cs->name))
 				return &(cs->value);
 		}
 	}
-	yyerror("Identifier %s has not been declared.", n);
 	return NULL;
 }
 

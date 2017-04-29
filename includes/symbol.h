@@ -23,7 +23,8 @@ struct scope *global, *current;
 
 void init_sym_table();
 void new_sym(char *, int, int);
-int *get_sym(char *, int);
+int get_sym(char *, int);
+int *where_sym(char *, int);
 void new_scope();
 void exit_scope();
 void print_table();
