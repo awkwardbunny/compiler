@@ -5,26 +5,26 @@
 
 int main(){
 	global = current = new_sym_table();
-	new_scope(FUNC);
-	set_sym(global, "i", NAME, 3, 1);
-	set_sym(global, "i", NAME, 21, 0);
+	new_scope(SCOPE_FUNC);
+	set_sym(global, "i", NS_NAME, 3, 1);
+	set_sym(global, "i", NS_NAME, 21, 0);
 	print_table(global);
 
 	struct scope *struct_table = new_sym_table();
-	set_sym(struct_table, "member1", MEMB, 3, 0);
-	set_sym(struct_table, "member2", MEMB, 3, 0);
+	set_sym(struct_table, "member1", NS_MEMB, 3, 0);
+	set_sym(struct_table, "member2", NS_MEMB, 3, 0);
 	print_table(struct_table);
 
 	exit_scope();
-	set_sym(global, "var1", NAME, 3, 0);
-	set_sym(global, "var1", NAME, 9, 1);
-	int a = get_sym(global, "var1", NAME);
+	set_sym(global, "var1", NS_NAME, 3, 0);
+	set_sym(global, "var1", NS_NAME, 9, 1);
+	int a = get_sym(global, "var1", NS_NAME);
 	printf("--%d--\n", a);
 	print_table(global);
 
-	struct ast_node *b = new_node(IDENT);
-	set_node(global, "var2", NAME, b);
-	struct ast_node *c = get_node(global, "var1", NAME);
+	struct ast_node *b = new_node(NODE_IDENT);
+	set_node(global, "var2", NS_NAME, b);
+	struct ast_node *c = get_node(global, "var1", NS_NAME);
 }
 
 void yyerror(char *s, ...){

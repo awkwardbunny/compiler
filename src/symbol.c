@@ -144,7 +144,7 @@ void print_table(struct scope *table){
 	for(csc = table; csc; csc = csc->child){
 		printf("%d (%d): ", i++, csc->type);
 		for(cs = csc->symbols; cs; cs = cs->next){
-			printf("(%s:%d:%s) ", cs->name, cs->val, (cs->ns ==NAME)?"NAME":(cs->ns==TAGS)?"TAG":(cs->ns==MEMB)?"MEMB":"LABEL");
+			printf("(%s:%d:%s) ", cs->name, cs->val, (cs->ns ==NS_NAME)?"NAME":(cs->ns==NS_TAGS)?"TAG":(cs->ns==NS_MEMB)?"MEMB":"LABEL");
 		}
 		printf("\n");
 	}

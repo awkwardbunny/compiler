@@ -2,21 +2,21 @@
 #define AST_H
 
 enum namespace_type {
-	NAME=0,
-	TAGS,
-	MEMB,
-	LABL
+	NS_NAME=0,
+	NS_TAGS,
+	NS_MEMB,
+	NS_LABL
 };
 
 enum scope_type{
-	GLBL=0,
-	FUNC,
-	BLOC,
-	PROT
+	SCOPE_GLBL=0,
+	SCOPE_FUNC,
+	SCOPE_BLOC,
+	SCOPE_PROT
 };
 
 enum node_type {
-	IDENT=1
+	NODE_IDENT=1
 };
 
 struct node_ident {

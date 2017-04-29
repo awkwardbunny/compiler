@@ -53,11 +53,11 @@ decl_specs: storage_class_spec decl_specs
 		  | func_spec decl_specs
 		  | func_spec
 		  ;
-init_declarator_list: init_declarator { new_sym($1, NS_NAME, 0); }
-					| init_declarator_list ',' init_declarator { new_sym($3, NS_NAME, 0); }
+init_declarator_list: init_declarator { }
+					| init_declarator_list ',' init_declarator { }
 					;
 init_declarator: declarator
-			   | declarator '=' initializer { yywarn("Initializer not supported!"); }
+			   | declarator '=' initializer { }
 			   ;
 storage_class_spec: AUTO
 				  | EXTERN
@@ -257,7 +257,7 @@ direct_abstract_declarator: '(' abstract_declarator ')'
                         | direct_abstract_declarator '(' ')'
                         ;
 /** Expressions **/
-primary_expr: IDENT { int *a = get_sym($1, NS_NAME); if(a) $$=*a; else $$=0; }
+primary_expr: IDENT { }
            | NUMBER
            | paren_expr
            ;
@@ -324,7 +324,7 @@ indirect_expr: '*' cast_expr
              ;
 preinc_expr: PLUSPLUS unary_expr
            ;
-predec_expr: MINUSMINUS unary_expr { $$ = $2-1 }
+predec_expr: MINUSMINUS unary_expr { }
            ;
 mult_expr: cast_expr
          | mult_expr mult_op cast_expr
@@ -378,7 +378,7 @@ cond_expr: log_or_expr
          | log_or_expr '?' expr ':' cond_expr
          ;
 assign_expr: cond_expr
-           | unary_expr assign_op assign_expr { $$ = $3; }
+           | unary_expr assign_op assign_expr { }
            ;
 assign_op: '='
          | PLUSEQ
@@ -393,7 +393,7 @@ assign_op: '='
          | OREQ
          ;
 comma_expr: assign_expr
-          | comma_expr ',' assign_expr { $$ = $3; }
+          | comma_expr ',' assign_expr { }
           ;
 expr: comma_expr
     ;
@@ -417,7 +417,7 @@ iter_stmt: do_stmt
          | while_stmt
          | for_stmt
          ;
-expr_stmt: expr ';' { exprprint($1); }
+expr_stmt: expr ';' { }
          ;
 label_stmt: label ':' stmt
           ;
@@ -425,7 +425,7 @@ label: named_label
      | case_label
      | default_label
      ;
-compound_stmt: '{' { new_scope(); } decl_or_stmt_list '}' { exit_scope(); }
+compound_stmt: '{' { } decl_or_stmt_list '}' { }
              | '{' '}'
              ;
 decl_or_stmt_list: decl_or_stmt
@@ -482,7 +482,7 @@ void exprprint(int val){
 }
 
 int main(){
-	init_sym_table();
+	global = current = new_sym_table();
 	return yyparse();
 }
 
