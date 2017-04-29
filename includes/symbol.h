@@ -1,33 +1,35 @@
 #ifndef SYMBOL_H
 #define SYMBOL_H
-
-#define NS_NAME 1
-#define NS_TAGS 2
-#define NS_MEMB 3
-#define NS_LABL 4
+#include <ast.h>
 
 struct scope {
+	enum scope_type type;
 	struct scope *parent;
 	struct scope *child;
-	struct sym *table;
+	struct sym *symbols;
 };
 
 struct sym {
-	int ns;
+	enum namespace_type ns;
 	char *name;
-	int value;
+	long long val;
+	struct ast_node *an;
 	struct sym *next;
 };
 
 struct scope *global, *current;
 
-void init_sym_table();
-void new_sym(char *, int, int);
-int get_sym(char *, int);
-int *where_sym(char *, int);
-void new_scope();
+struct scope *new_sym_table(void);
+void del_sym_table(struct scope *);
+
+long long get_sym(struct scope *table, char *name, enum namespace_type);
+void set_sym(struct scope *table, char *name, enum namespace_type, long long val, int replace);
+struct ast_node *get_node(struct scope *table, char *name, enum namespace_type);
+void set_node(struct scope *table, char *name, enum namespace_type, struct ast_node *val);
+
+void new_scope(enum scope_type);
 void exit_scope();
-void print_table();
+void print_table(struct scope *);
 
 void yyerror(char *, ...);
 void yywarn(char *, ...);

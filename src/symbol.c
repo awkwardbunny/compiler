@@ -3,92 +3,131 @@
 #include <stdio.h>
 #include <symbol.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
-void init_sym_table(){
-	global = (struct scope *)malloc(sizeof(struct scope));
-	global->parent = NULL;
-	global->child = NULL;
-	current = global;
+struct scope *new_sym_table(){
+#if DEBUG
+	printf("Creating new symbol table\n");
+#endif
+	struct scope *table = (struct scope *)malloc(sizeof(struct scope));
+	table->parent = NULL;
+	table->child = NULL;
+	table->symbols = NULL;
+	return table;
 }
 
-void new_sym(char *n, int ns, int val){
+void del_sym_table(struct scope *st){
 #if DEBUG
-	printf("Adding symbol: %d %s\t%d\n", ns, n, val);
+	printf("Deleting a symbol table\n");
 #endif
-	struct sym **spp;
-	for(spp = &(current->table); *spp; spp = &((*spp)->next)){
-		if(!strcmp((*spp)->name, n)){
-			yyerror("Identifier already declared! Ignoring.");
-			return;
+	struct scope *csc = st;
+	while(csc){
+		struct sym *cs = csc->symbols;
+		while(cs){
+			struct sym *ns = cs->next;
+			free(cs);
+			cs = ns;
+		}
+		struct scope *nsc = csc->child;
+		free(csc);
+		csc = nsc;
+	}
+}
+
+long long get_sym(struct scope *table, char *name, enum namespace_type ns){
+	for(struct scope *csc = table; csc; csc = csc->parent){
+		for(struct sym *cs = csc->symbols; cs; cs = cs->next){
+			if(ns == cs->ns && !strcmp(name, cs->name))
+				return cs->val;
 		}
 	}
-	*spp = (struct sym *)malloc(sizeof(struct sym));
-	//spp = &((*spp)->next);
+	yyerror("Undefined variable %s", name);
+	return 0;
+}
 
-	int nl = strlen(n);
-	(*spp)->name = (char *)malloc(nl);
+void set_sym(struct scope *table, char *name, enum namespace_type ns, long long val, int replace){
+	// Attempt a search
+	for(struct scope *csc = table; csc; csc = csc->child){
+		for(struct sym *cs = csc->symbols; cs; cs = cs->next){
+			//if found
+			if(ns == cs->ns && !strcmp(name, cs->name)){
+				// and if replace is set
+				if(replace)
+					cs->val = val;
+				else
+					yyerror("Identifier already declared! Ignoring.");
+				return;
+			}
+		}
+	}
+
+	// If not found, add
+#if DEBUG
+	printf("Adding symbol: %d %s\t%d\n", ns, name, val);
+#endif
+	struct scope *csc;
+	struct sym **spp;
+	for(csc = table; csc->child; csc=csc->child);
+	for(spp = &(csc->symbols); *spp; spp = &((*spp)->next));
+	*spp = (struct sym *)malloc(sizeof(struct sym));
+
+	(*spp)->name = strdup(name);
 	(*spp)->ns = ns;
-	strncpy((*spp)->name, n, nl);
-	(*spp)->value = val;
+	(*spp)->val = val;
 	(*spp)->next = NULL;
 }
 
-/* TODO Not tested */
-void set_sym(char *n, int ns, int val){
-#if DEBUG
-	printf("Setting %s to %d\n", n, val);
-#endif
-	int *sym = where_sym(n, ns);
-	if(sym)
-		*sym = val;
-	else
-		yyerror("Undefined variable %s", n);
-}
-
-int get_sym(char *n, int ns){
-	int *sym = where_sym(n, ns);
-	if(sym)
-		return *sym;
-	yyerror("Undefined variable %s", n);
-	return NULL;
-}
-
-/* TODO Not tested */
-int *where_sym(char *n, int ns){
-	for(struct scope *csc = current; csc; csc = csc->parent){
-		for(struct sym *cs = csc->table; cs; cs = cs->next){
-			if(ns == cs->ns && !strcmp(n, cs->name))
-				return &(cs->value);
+struct ast_node *get_node(struct scope *table, char *name, enum namespace_type ns){
+	for(struct scope *csc = table; csc; csc = csc->parent){
+		for(struct sym *cs = csc->symbols; cs; cs = cs->next){
+			if(ns == cs->ns && !strcmp(name, cs->name))
+				return cs->an;
 		}
 	}
+	yyerror("Undefined variable %s", name);
 	return NULL;
 }
 
-void new_scope(){
+void set_node(struct scope *table, char *name, enum namespace_type ns, struct ast_node *val){
+	// Attempt a search
+	for(struct scope *csc = table; csc; csc = csc->child){
+		for(struct sym *cs = csc->symbols; cs; cs = cs->next){
+			//if found
+			if(ns == cs->ns && !strcmp(name, cs->name)){
+				cs->an = val;
+				return;
+			}
+		}
+	}
+
+	// If not found
+	fprintf(stderr, "Identifier %s cannot be found\n", name);
+}
+void new_scope(enum scope_type st){
 #if DEBUG
-	printf("New scope\n");
+	printf("New scope %d\n", st);
 #endif
 	current->child = (struct scope *)malloc(sizeof(struct scope));
 	current->child->parent = current;
 	current = current->child;
 
+	current->type = st;
 	current->child = NULL;
-	current->table = NULL;
+	current->symbols = NULL;
 }
 
 void exit_scope(){
 #if DEBUG
-	printf("Exiting scope\n");
+	printf("Exiting scope %d\n", current->type);
 #endif
-	struct sym *cs = current->table;
+	struct sym *cs = current->symbols;
 	while(cs){
 		struct sym *ns = cs->next;
 		free(cs);
 		cs = ns;
 	}
 
-	if(current==global){
+	if(!current->parent){
 		yyerror("Currently in global scope. Cannot exit. Ignoring.");
 		return;
 	}
@@ -98,14 +137,14 @@ void exit_scope(){
 	current->child = NULL;
 }
 
-void print_table(){
+void print_table(struct scope *table){
 	struct scope *csc;
 	struct sym *cs;
 	int i = 0;
-	for(csc = global; csc; csc = csc->child){
-		printf("%d: ", i++);
-		for(cs = csc->table; cs; cs = cs->next){
-			printf("(%s:%d:%s) ", cs->name, cs->value, (cs->ns ==NS_NAME)?"NAME":(cs->ns==NS_TAGS)?"TAG":(cs->ns==NS_MEMB)?"MEMB":"LABEL");
+	for(csc = table; csc; csc = csc->child){
+		printf("%d (%d): ", i++, csc->type);
+		for(cs = csc->symbols; cs; cs = cs->next){
+			printf("(%s:%d:%s) ", cs->name, cs->val, (cs->ns ==NAME)?"NAME":(cs->ns==TAGS)?"TAG":(cs->ns==MEMB)?"MEMB":"LABEL");
 		}
 		printf("\n");
 	}

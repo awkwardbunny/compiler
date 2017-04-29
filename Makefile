@@ -23,7 +23,7 @@ symboltests: symbol
 	@echo Running symbol table test...
 	@./$^
 
-symbol: src/symbol.c tests/symbol.c
+symbol: src/symbol.c tests/symbol.c src/ast.c
 	@echo Building symbol table test...
 	@gcc -o $@ $^ $(CFLAGS)
 
