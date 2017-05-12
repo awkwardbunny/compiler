@@ -23,8 +23,8 @@ void print_ast(struct ast_node *root, int level){
 	for(struct ast_node *a = root; a; a = a->next){
 		switch(root->type){
 			for(int i = 0; i < level; i++) printf("\t");
-			case NODE_VAR:
-				printf("%s\n", root->u.var.name);
+			case NODE_IDENT:
+				printf("IDENT %s\n", root->u.ident);
 				break;
 			default:
 				printf("%s\n", "some kind of AST node");

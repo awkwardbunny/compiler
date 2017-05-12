@@ -8,19 +8,15 @@ void exprprint(int);
 %}
 
 %union {
-	struct string_literal s;
-	struct number n;
-	struct identifier id;
-	unsigned char charlit;
+	struct ast_node *n;
 }
-
-%type<id.name> IDENT simple_declarator direct_declarator declarator init_declarator
-%type<n.i> primary_expr postfix_expr unary_expr predec_expr assign_expr comma_expr expr
 
 %token TOKEOF IDENT CHARLIT STRING NUMBER INDSEL PLUSPLUS MINUSMINUS SHL SHR LTEQ GTEQ EQEQ NOTEQ LOGAND LOGOR ELLIPSIS TIMESEQ DIVEQ MODEQ PLUSEQ MINUSEQ SHLEQ SHREQ ANDEQ OREQ XOREQ AUTO BREAK CASE CHAR CONST CONTINUE DEFAULT DO DOUBLE ELSE ENUM EXTERN FLOAT FOR GOTO IF INLINE INT LONG REGISTER RESTRICT RETURN SHORT SIGNED SIZEOF STATIC STRUCT SWITCH TYPEDEF UNION UNSIGNED VOID VOLATILE WHILE _BOOL _COMPLEX _IMAGINARY
 
 %right UNSIGNED SIGNED SHORT LONG INT CHAR DOUBLE
 %right ')' ELSE
+
+%start translation_unit
 
 %%
 /* From H&S C Ref book */

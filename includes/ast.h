@@ -16,21 +16,49 @@ enum scope_type{
 };
 
 enum node_type {
-	NODE_VAR=1
+	NODE_IDENT=1,
+	NODE_STRLIT,
+	NODE_CHRLIT,
+	NODE_NUM
 };
 
-struct node_var {
-	enum namespace_type type;
-	char *name;
-	char *filename;
-	int lineno;
+struct node_strlit {
+	char *bytes;
+	int length;
+};
+
+enum num_type {
+	NT_INT=1,
+	NT_UINT,
+	NT_L,
+	NT_UL,
+	NT_LL,
+	NT_ULL,
+	NT_FP,
+	NT_DBL,
+	NT_LDBL
+};
+
+struct node_num {
+	enum num_type type;
+	union {
+		unsigned int i;
+		unsigned long l;
+		unsigned long long ll;
+		float f;
+		double d;
+		long double ld;
+	} val;
 };
 
 struct ast_node {
 	enum node_type type;
 	struct ast_node *next;
 	union {
-		struct node_var var;
+		char *ident;
+		char chrlit;
+		struct node_strlit strlit;
+		struct node_num num;
 	} u;
 };
 
