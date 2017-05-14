@@ -1,20 +1,6 @@
 #ifndef AST_H
 #define AST_H
 
-enum namespace_type {
-	NS_NAME=0,
-	NS_TAGS,
-	NS_MEMB,
-	NS_LABL
-};
-
-enum scope_type{
-	SCOPE_GLBL=0,
-	SCOPE_FUNC,
-	SCOPE_BLOC,
-	SCOPE_PROT
-};
-
 enum node_type {
 	NODE_IDENT=1,
 	NODE_STRLIT,
