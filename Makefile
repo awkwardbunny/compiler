@@ -9,7 +9,7 @@ ptests: parser
 	@gcc -E tests/ptest.c | ./$<
 
 # Parser
-parser: src/parser.tab.c src/lex.yy.c src/symbol.c
+parser: src/parser.tab.c src/lex.yy.c src/symbol.c src/ast.c
 	@echo Building lexer + parser...
 	@gcc -o $@ $^ $(CFLAGS)
 

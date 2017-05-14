@@ -124,8 +124,7 @@ int mode = 0;
 
  /* IDENTIFIERS */
 [a-zA-Z_][0-9a-zA-Z_]* {
-	yylval.n->type = NODE_IDENT;
-	yylval.n->u.ident = strdup(yytext);
+	yylval.strbuf = strdup(yytext);
 	return IDENT; 
 }
 
@@ -149,6 +148,7 @@ int mode = 0;
  /** FLOAT */
  /* TODO [NOT CRITICAL] */
 (([0-9]+[eE]|0[xX]([0-9a-fA-F]+\.[0-9a-fA-F]*|\.?[0-9a-fA-F]+)[pP])[+-]?[0-9]+|(\.[0-9]+|[0-9]+\.[0-9]*)([eE][+-]?[0-9]+)?)[fFlL]? {
+	yylval.n = new_node(AST_NUM);
 	switch(yytext[yyleng-1]){
 		case 'f':
 		case 'F':
@@ -178,13 +178,13 @@ int mode = 0;
  /** CHAR */
  /* TODO [Review] */
 L?\' {
-	yylval.n->u.chrlit = 0;
+	yylval.chrlit = 0;
 	mode = CHARLIT;
 	BEGIN(SC_CHAR);
 }
 <SC_CHAR>[^\n\'\\]+ {
-	if(!yylval.n->u.chrlit)
-		yylval.n->u.chrlit = yytext[0];
+	if(!yylval.chrlit)
+		yylval.chrlit = yytext[0];
 	if(yyleng > 1)
 		yywarn("Unsupported multibyte character literal truncated to first byte");
 }
@@ -204,7 +204,7 @@ L?\' {
  /** STRING */
  /* TODO [Review] */
 L?\" {
-	yylval.n->u.strlit.length = 0;
+	yylval.strlit_length = 0;
 	mode = STRING;
 	BEGIN(SC_STR);
 }
@@ -247,7 +247,7 @@ L?\" {
 			BEGIN(SC_STR);
 			break;
 		case CHARLIT:
-			yylval.n->u.chrlit = x;
+			yylval.chrlit = x;
 			BEGIN(SC_CHAR);
 	}
 }
@@ -264,7 +264,7 @@ L?\" {
 			BEGIN(SC_STR);
 			break;
 		case CHARLIT:
-			yylval.n->u.chrlit = o;
+			yylval.chrlit = o;
 			BEGIN(SC_CHAR);
 	}
 }
@@ -283,7 +283,7 @@ L?\" {
 			BEGIN(SC_STR);
 			break;
 		case CHARLIT:
-			yylval.n->u.chrlit = h;
+			yylval.chrlit = h;
 			BEGIN(SC_CHAR);
 			break;
 	}
@@ -293,18 +293,18 @@ L?\" {
 
 /* TODO Review */
 void mystrcat(char *str, int l){
-	if(yylval.n->u.strlit.length){
-		char *new = (char *)realloc(yylval.n->u.strlit.bytes, yylval.n->u.strlit.length+l);
+	if(yylval.strlit_length){
+		char *new = (char *)realloc(yylval.strbuf, yylval.strlit_length+l);
 		if(!new){
 			yyerror("Error: realloc failed in mystrcat()! %s", strerror(errno));
 			exit(-1);
 		}
-		yylval.n->u.strlit.bytes = new;
+		yylval.strbuf = new;
 	}else{
-		yylval.n->u.strlit.bytes = (char *)malloc(l);
+		yylval.strbuf = (char *)malloc(l);
 	}
-	memcpy(yylval.n->u.strlit.bytes+yylval.n->u.strlit.length, str, l);
-	yylval.n->u.strlit.length += l;
+	memcpy(yylval.strbuf+yylval.strlit_length, str, l);
+	yylval.strlit_length += l;
 }
 
 void processint(char *str, int len, int base){
@@ -325,7 +325,7 @@ void processint(char *str, int len, int base){
 		 yywarn("Value too large. %s", strerror(errno));
 	}
 
-	yylval.n->type = NODE_NUM;
+	yylval.n->type = AST_NUM;
 	if(longs == 1){
 		yylval.n->u.num.type = uns?NT_UL:NT_L;
 		yylval.n->u.num.val.l = ll;

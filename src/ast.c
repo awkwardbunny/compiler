@@ -14,12 +14,8 @@ struct ast_node *new_node(enum node_type nt){
 	return pan;
 }
 
-struct ast_node *add_node(struct ast_node *a, struct ast_node *b){
-	while(a) a = a->next;
-	a = b;
-}
-
 void print_ast(struct ast_node *root, int level){
+	/*
 	for(struct ast_node *a = root; a; a = a->next){
 		switch(root->type){
 			for(int i = 0; i < level; i++) printf("\t");
@@ -30,4 +26,5 @@ void print_ast(struct ast_node *root, int level){
 				printf("%s\n", "some kind of AST node");
 		}
 	}
+	*/
 }
