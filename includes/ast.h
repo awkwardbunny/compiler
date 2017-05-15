@@ -23,6 +23,7 @@ enum node_type {
 	AST_RET,
 	AST_GOTO,
 	AST_FOR,
+	AST_ASGN,
 	AST_BLOCK
 };
 
@@ -184,7 +185,11 @@ struct node_ret {
 };
 
 struct node_for {
-	struct ast_node *init, *cond, *inc;
+	struct ast_node *init, *cond, *inc, *body;
+};
+
+struct node_asgn {
+	struct ast_node *lval, *rval;
 };
 
 struct ast_node {
@@ -211,6 +216,7 @@ struct ast_node {
 		struct node_goto ngoto;
 		struct node_ret ret;
 		struct node_for nfor;
+		struct node_asgn asgn;
 	} u;
 };
 

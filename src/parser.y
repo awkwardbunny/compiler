@@ -30,7 +30,7 @@ struct ast_node *h, *t;
 %type<strbuf> IDENT
 %type<n> if_stmt stmt expr expr_stmt goto_stmt if_else_stmt while_stmt ret_stmt compound_stmt decl_or_stmt decl_or_stmt_list
 %type<n> named_label
-%type<n> for_expr init_clause
+%type<n> for_expr init_clause for_stmt
 
 %%
 /* From H&S C Ref book */
@@ -608,7 +608,10 @@ while_stmt: WHILE '(' expr ')' stmt {
           ;
 do_stmt: DO stmt WHILE '(' expr ')'
        ;
-for_stmt: FOR for_expr stmt
+for_stmt: FOR for_expr stmt {
+			$$ = $2;
+			$$->u.nfor.body = $3;
+		}
         ;
 for_expr: '(' init_clause ';' expr ';' expr ')' {
 			$$ = new_node(AST_FOR);
@@ -701,6 +704,9 @@ void exprprint(int val){
 int main(){
 	global = current = new_sym_table();
 //	return yyparse();
+
+	// Test print_ast
+	//  Test VAR, ARRAY, PTR, SCALAR
 	struct ast_node *n = new_node(AST_VAR);
 	n->u.var.name = "p";
 	struct ast_node *m = new_node(AST_ARRAY);
@@ -713,5 +719,53 @@ int main(){
 	o->u.ptr.ptr = m;
 
 	print_ast(n, 0);
+
+	//  Test FOR, ASGN, constant (NUM)
+	n = new_node(AST_SCALAR);
+	n->u.scalar.type = SCLR_INT;
+	m = new_node(AST_VAR);
+	m->u.var.ptr = n;
+	m->u.var.name = "a";
+
+	struct ast_node *p = new_node(AST_VAR);
+	struct ast_node *q = new_node(AST_SCALAR);
+	q->u.scalar.type = SCLR_INT;
+	p->u.var.ptr = q;
+	p->u.var.name = "b";
+
+	o = new_node(AST_NUM);
+	o->u.num.type = NT_INT;
+	o->u.num.val.i = 1;
+	
+	n = new_node(AST_ASGN);
+	n->u.asgn.lval = m;
+	n->u.asgn.rval = o;
+
+	o = new_node(AST_FOR);
+	o->u.nfor.init = n;
+
+	n = new_node(AST_BINOP);
+	n->u.binop.op = BINOP_LT;
+	n->u.binop.left = m;
+	n->u.binop.right = p;
+
+	o->u.nfor.cond = n;
+
+	p = new_node(AST_NUM);
+	p->u.num.type = NT_INT;
+	p->u.num.val.i = 1;
+
+	q = new_node(AST_BINOP);
+	q->u.binop.op = BINOP_PLUS;
+	q->u.binop.left = m;
+	q->u.binop.right = p;
+
+	p = new_node(AST_ASGN);
+	p->u.asgn.lval = m;
+	p->u.asgn.rval = q;
+
+	o->u.nfor.inc = p;
+
+	print_ast(o, 0);
 }
 
