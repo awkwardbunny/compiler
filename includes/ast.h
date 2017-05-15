@@ -29,6 +29,7 @@ enum node_type {
 struct node_ident {
 	struct ast_node *ptr;
 	char *name;
+	struct ast_node *h, *t;
 };
 
 enum storage_type {

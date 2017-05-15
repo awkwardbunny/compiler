@@ -25,7 +25,7 @@ struct ast_node *h, *t;
 
 %start translation_unit
 
-%type<n> init_declarator declarator direct_declarator simple_declarator init_declarator_list pointer_declarator
+%type<n> init_declarator declarator direct_declarator simple_declarator init_declarator_list pointer_declarator decl
 %type<n> type_spec int_type_spec signed_type_spec unsigned_type_spec storage_class_spec decl_specs type_qual func_spec char_type_spec bool_type_spec void_type_spec
 %type<strbuf> IDENT
 %type<n> if_stmt stmt expr expr_stmt goto_stmt if_else_stmt while_stmt ret_stmt compound_stmt decl_or_stmt decl_or_stmt_list
@@ -54,8 +54,20 @@ decl_list: decl
 /** Declaration **/
 decl: decl_specs init_declarator_list ';' {
 		while($2){
+			$2->type = AST_VAR;
 			struct sym *a;
+			//if($2->u.var.ptr->type == AST_
+			a = new_sym($2->u.var.name, NS_NAME, ID_VAR, filename, yylineno);
+			struct ast_node *n = dup_node($1);
+			a->an = $2;
+			$2 = $2->next;
+			a->an->next = NULL;
+			//add the base type
+			//get storage class and add to symtab
+			$$ = n;
+			print_ast(a->an, 0);
 		}
+		free($1);
 	}
 	;
 decl_specs: storage_class_spec decl_specs {
@@ -125,8 +137,8 @@ declarator: pointer_declarator
           ;
 pointer_declarator: pointer direct_declarator {
 					$$ = new_node(AST_PTR);
-					t->u.ident.ptr = $$; // ident, array, and ptr have ptr in same offset
-					t = $$;
+					//t->u.ident.ptr = $$; // ident, array, and ptr have ptr in same offset
+					//t = $$;
 				  }
                   ;
 pointer: '*'
@@ -688,6 +700,18 @@ void exprprint(int val){
 
 int main(){
 	global = current = new_sym_table();
-	return yyparse();
+//	return yyparse();
+	struct ast_node *n = new_node(AST_VAR);
+	n->u.var.name = "p";
+	struct ast_node *m = new_node(AST_ARRAY);
+	m->u.array.size = 10;
+	n->u.var.ptr = m;
+	struct ast_node *o = new_node(AST_PTR);
+	m->u.array.ptr = o;
+	m = new_node(AST_SCALAR);
+	m->u.scalar.type = SCLR_INT;
+	o->u.ptr.ptr = m;
+
+	print_ast(n, 0);
 }
 

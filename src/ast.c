@@ -22,16 +22,30 @@ struct ast_node *dup_node(struct ast_node *n){
 }
 
 void print_ast(struct ast_node *root, int level){
-	/*
 	for(struct ast_node *a = root; a; a = a->next){
-		switch(root->type){
-			for(int i = 0; i < level; i++) printf("\t");
-			case NODE_IDENT:
-				printf("IDENT %s\n", root->u.ident);
+		for(int i = 0; i < level; i++) printf("  ");
+		switch(a->type){
+			case AST_IDENT:
+				printf("IDENT %s\n", a->u.ident.name);
+				print_ast(a->u.var.ptr, level+1);
+				break;
+			case AST_SCALAR:
+				printf("SCALAR %s\n", (a->u.scalar.type == SCLR_INT)?"INT":(a->u.scalar.type==SCLR_SHORT)?"SHORT":"CHAR");
+				break;
+			case AST_VAR:
+				printf("VAR %s\n", a->u.var.name);
+				print_ast(a->u.var.ptr, level+1);
+				break;
+			case AST_ARRAY:
+				printf("ARRAY SIZE %d OF\n", a->u.array.size);
+				print_ast(a->u.array.ptr, level+1);
+				break;
+			case AST_PTR:
+				printf("POINTER TO\n");
+				print_ast(a->u.ptr.ptr, level+1);
 				break;
 			default:
 				printf("%s\n", "some kind of AST node");
 		}
 	}
-	*/
 }
