@@ -89,6 +89,7 @@ struct sym {
 	char *fname;
 	int lineno;
 
+	// Unused? Should be in AST?
 	enum ident_type it;
 	union attrs{
 		struct attr_var v;
@@ -108,6 +109,7 @@ void del_sym_table(struct scope *);
 
 struct sym *get_sym(struct scope *table, char *name, enum namespace_type);
 int set_sym(struct scope *table, char *name, enum namespace_type, struct sym *sp, int replace);
+struct sym *new_sym(char *id, enum namespace_type ns, enum ident_type it, char *fn, int ln);
 
 void new_scope(enum scope_type);
 void exit_scope();

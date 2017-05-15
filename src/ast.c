@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <symbol.h>
 #include <ast.h>
@@ -12,6 +13,12 @@ struct ast_node *new_node(enum node_type nt){
 	pan->type = nt;
 	pan->next = NULL;
 	return pan;
+}
+
+struct ast_node *dup_node(struct ast_node *n){
+	struct ast_node *m = malloc(sizeof(struct ast_node));
+	memcpy(m, n, sizeof(struct ast_node));
+	return m;
 }
 
 void print_ast(struct ast_node *root, int level){

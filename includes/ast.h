@@ -4,6 +4,7 @@
 
 enum node_type {
 	AST_IDENT=1,
+	AST_STORAGE,
 	AST_SCALAR,
 	AST_NUM,
 	AST_PTR,
@@ -18,11 +19,27 @@ enum node_type {
 	AST_UNOP,
 	AST_IF,
 	AST_IFELSE,
+	AST_WHILE,
+	AST_RET,
+	AST_GOTO,
+	AST_FOR,
 	AST_BLOCK
 };
 
 struct node_ident {
+	struct ast_node *ptr;
 	char *name;
+};
+
+enum storage_type {
+	STG_AUTO,
+	STG_REG,
+	STG_EXTERN,
+	STG_STATIC
+};
+
+struct node_storage {
+	enum storage_type type;
 };
 
 enum num_type {
@@ -37,16 +54,14 @@ enum num_type {
 	NT_LDBL
 };
 
+enum scalar_type {
+	SCLR_INT,
+	SCLR_SHORT,
+	SCLR_CHAR
+};
+
 struct node_scalar {
-	enum num_type type;
-	union {
-		unsigned int i;
-		unsigned long l;
-		unsigned long long ll;
-		float f;
-		double d;
-		long double ld;
-	} val;
+	enum scalar_type type;
 };
 
 struct node_num {
@@ -155,12 +170,29 @@ struct node_block {
 	struct ast_node *stmts;
 };
 
+struct node_while {
+	struct ast_node *cond, *stmts;
+};
+
+struct node_goto {
+	struct ast_node *label;
+};
+
+struct node_ret {
+	struct ast_node *retval;
+};
+
+struct node_for {
+	struct ast_node *init, *cond, *inc;
+};
+
 struct ast_node {
 	enum node_type type;
 	struct ast_node *next;
 	union {
 		struct node_ident ident;
 		struct node_scalar scalar;
+		struct node_storage storage;
 		struct node_num num;
 		struct node_ptr ptr;
 		struct node_func func;
@@ -174,11 +206,16 @@ struct ast_node {
 		struct node_if nif;
 		struct node_ifelse nifelse;
 		struct node_block block;
+		struct node_while nwhile;
+		struct node_goto ngoto;
+		struct node_ret ret;
+		struct node_for nfor;
 	} u;
 };
 
 struct ast_node *ast;
 
 struct ast_node *new_node(enum node_type);
+struct ast_node *dup_node(struct ast_node *);
 void print_ast(struct ast_node *, int);
 #endif

@@ -2,9 +2,13 @@
 #include <stdio.h>
 #include <lexer.h>
 #include <symbol.h>
+#include <ast.h>
 
 int yylex();
 void exprprint(int);
+
+//head-tail thingy for declaration
+struct ast_node *h, *t;
 %}
 
 %union {
@@ -20,6 +24,13 @@ void exprprint(int);
 %right ')' ELSE
 
 %start translation_unit
+
+%type<n> init_declarator declarator direct_declarator simple_declarator init_declarator_list pointer_declarator
+%type<n> type_spec int_type_spec signed_type_spec unsigned_type_spec storage_class_spec decl_specs type_qual func_spec char_type_spec bool_type_spec void_type_spec
+%type<strbuf> IDENT
+%type<n> if_stmt stmt expr expr_stmt goto_stmt if_else_stmt while_stmt ret_stmt compound_stmt decl_or_stmt decl_or_stmt_list
+%type<n> named_label
+%type<n> for_expr init_clause
 
 %%
 /* From H&S C Ref book */
@@ -41,28 +52,59 @@ decl_list: decl
 		 | decl_list decl
 		 ;
 /** Declaration **/
-decl: decl_specs init_declarator_list ';'
+decl: decl_specs init_declarator_list ';' {
+		while($2){
+			struct sym *a;
+		}
+	}
 	;
-decl_specs: storage_class_spec decl_specs
+decl_specs: storage_class_spec decl_specs {
+			$$ = $2;
+			$2->next = $1;
+		  }
 		  | storage_class_spec
-		  | type_spec decl_specs
+		  | type_spec decl_specs {
+			$$ = $2;
+			$2->next = $1;
+		  }
 		  | type_spec
-		  | type_qual decl_specs
+		  | type_qual decl_specs {
+			$$ = $2;
+			$2->next = $1;
+		  }
 		  | type_qual
-		  | func_spec decl_specs
+		  | func_spec decl_specs {
+			$$ = $2;
+			$2->next = $1;
+		  }
 		  | func_spec
 		  ;
 init_declarator_list: init_declarator { }
-					| init_declarator_list ',' init_declarator { }
+					| init_declarator_list ',' init_declarator {
+						$$ = $1;
+						$1->next = $3;
+					}
 					;
 init_declarator: declarator
-			   | declarator '=' initializer { }
+			   | declarator '=' initializer { yywarn("init_declarator not supported! Ignoring."); }
 			   ;
-storage_class_spec: AUTO
-				  | EXTERN
-				  | REGISTER
-				  | STATIC
-				  | TYPEDEF
+storage_class_spec: AUTO {
+					$$ = new_node(AST_STORAGE);
+					$$->u.storage.type = STG_AUTO;
+				  }
+				  | EXTERN {
+					$$ = new_node(AST_STORAGE);
+					$$->u.storage.type = STG_EXTERN;
+				  }
+				  | REGISTER {
+					$$ = new_node(AST_STORAGE);
+					$$->u.storage.type = STG_REG;
+				  }
+				  | STATIC {
+					$$ = new_node(AST_STORAGE);
+					$$->u.storage.type = STG_STATIC;
+				  }
+				  | TYPEDEF { }
 				  ;
 type_spec: int_type_spec 
 		 | flpt_type_spec
@@ -81,7 +123,11 @@ func_spec: INLINE
 declarator: pointer_declarator
           | direct_declarator
           ;
-pointer_declarator: pointer direct_declarator
+pointer_declarator: pointer direct_declarator {
+					$$ = new_node(AST_PTR);
+					t->u.ident.ptr = $$; // ident, array, and ptr have ptr in same offset
+					t = $$;
+				  }
                   ;
 pointer: '*'
        | '*' type_qual_list
@@ -89,11 +135,15 @@ pointer: '*'
        | '*' type_qual_list pointer
        ;
 direct_declarator: simple_declarator
-                 | '(' declarator ')'
+                 | '(' declarator ')' { $$ = $2; }
                  | func_declarator
                  | array_declarator
                  ;
-simple_declarator: IDENT
+simple_declarator: IDENT {
+					$$ = new_node(AST_IDENT);
+					$$->u.ident.name = $1;
+					h = t = $$;
+				 }
                  ;
 type_qual_list: type_qual
               | type_qual_list type_qual
@@ -158,36 +208,117 @@ int_type_spec: signed_type_spec
              | char_type_spec
              | bool_type_spec
              ;
-signed_type_spec: SHORT
-                | SHORT INT
-                | SIGNED SHORT
-                | SIGNED SHORT INT
-                | INT
-                | SIGNED INT
-                | SIGNED
-                | LONG
-                | LONG INT
-                | SIGNED LONG
-                | SIGNED LONG INT
-                | LONG LONG
-                | LONG LONG INT
-                | SIGNED LONG LONG
-                | SIGNED LONG LONG INT
+signed_type_spec: SHORT {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_SHORT;
+				}
+                | SHORT INT {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_SHORT;
+				}
+                | SIGNED SHORT {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_SHORT;
+				}
+                | SIGNED SHORT INT {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_SHORT;
+				}
+                | INT {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_INT;
+				}
+                | SIGNED INT {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_INT;
+				}
+                | SIGNED {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_INT;
+				}
+                | LONG {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_INT;
+				}
+                | LONG INT {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_INT;
+				}
+                | SIGNED LONG {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_INT;
+				}
+                | SIGNED LONG INT {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_INT;
+				}
+                | LONG LONG {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_INT;
+				}
+                | LONG LONG INT {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_INT;
+				}
+                | SIGNED LONG LONG {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_INT;
+				}
+                | SIGNED LONG LONG INT {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_INT;
+				}
                 ;
-unsigned_type_spec: UNSIGNED SHORT INT
-                  | UNSIGNED SHORT
-                  | UNSIGNED INT
-                  | UNSIGNED
-                  | UNSIGNED LONG INT
-                  | UNSIGNED LONG
-                  | UNSIGNED LONG LONG INT
-                  | UNSIGNED LONG LONG
+unsigned_type_spec: UNSIGNED SHORT INT {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_SHORT;
+				  }
+                  | UNSIGNED SHORT {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_SHORT;
+				  }
+                  | UNSIGNED INT {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_INT;
+				  }
+                  | UNSIGNED {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_INT;
+				  }
+                  | UNSIGNED LONG INT {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_INT;
+				  }
+                  | UNSIGNED LONG {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_INT;
+				  }
+                  | UNSIGNED LONG LONG INT {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_INT;
+				  }
+                  | UNSIGNED LONG LONG {
+					$$ = new_node(AST_SCALAR);
+					$$->u.scalar.type = SCLR_INT;
+				  }
                   ;
-char_type_spec: CHAR
-              | SIGNED CHAR
-              | UNSIGNED CHAR
+char_type_spec: CHAR {
+				$$ = new_node(AST_SCALAR);
+				$$->u.scalar.type = SCLR_CHAR;
+			  }
+              | SIGNED CHAR {
+				$$ = new_node(AST_SCALAR);
+				$$->u.scalar.type = SCLR_CHAR;
+			  }
+              | UNSIGNED CHAR {
+				$$ = new_node(AST_SCALAR);
+				$$->u.scalar.type = SCLR_CHAR;
+			  }
               ;
-bool_type_spec: _BOOL
+bool_type_spec: _BOOL {
+				$$ = new_node(AST_SCALAR);
+				$$->u.scalar.type = SCLR_CHAR;
+			  }
               ;
 flpt_type_spec: FLOAT
               | DOUBLE
@@ -198,7 +329,10 @@ complx_type_spec: FLOAT _COMPLEX
                 | DOUBLE _COMPLEX
                 | LONG DOUBLE _COMPLEX
                 ;
-void_type_spec: VOID
+void_type_spec: VOID {
+				$$ = new_node(AST_SCALAR);
+				$$->u.scalar.type = SCLR_INT;
+			  }
               ;
 struct_type_spec: struct_type_def
                 | struct_type_ref
@@ -407,7 +541,7 @@ stmt: expr_stmt
     | cont_stmt
     | ret_stmt
     | goto_stmt
-    | null_stmt
+    | null_stmt { }
     ;
 cond_stmt: if_stmt
          | if_else_stmt
@@ -424,33 +558,94 @@ label: named_label
      | case_label
      | default_label
      ;
-compound_stmt: '{' { } decl_or_stmt_list '}' { }
-             | '{' '}'
+compound_stmt: '{' {
+				//mid-action to enter a new scope
+			 } decl_or_stmt_list '}' {
+				$$ = new_node(AST_BLOCK);
+				$$->u.block.stmts = $3;
+			 }
+             | '{' '}' {
+				$$ = new_node(AST_BLOCK);
+				$$->u.block.stmts = NULL;
+			 }
              ;
 decl_or_stmt_list: decl_or_stmt
-                 | decl_or_stmt_list decl_or_stmt
+                 | decl_or_stmt_list decl_or_stmt { $1->next = $2; $$=$1; }
                  ;
 decl_or_stmt: decl
             | stmt
             ;
-if_stmt: IF '(' expr ')' stmt
+if_stmt: IF '(' expr ')' stmt {
+		$$ = new_node(AST_IF);
+		$$->u.nif.cond = $3;
+		$$->u.nif.t = $5;
+	   }
        ;
-if_else_stmt: IF '(' expr ')' stmt ELSE stmt
+if_else_stmt: IF '(' expr ')' stmt ELSE stmt {
+				$$ = new_node(AST_IFELSE);
+				$$->u.nifelse.cond = $3;
+				$$->u.nifelse.t = $5;
+				$$->u.nifelse.f = $7;
+			}
             ;
-while_stmt: WHILE '(' expr ')' stmt
+while_stmt: WHILE '(' expr ')' stmt {
+			$$ = new_node(AST_WHILE);
+			$$->u.nwhile.cond = $3;
+			$$->u.nwhile.stmts = $5;
+		  }
           ;
 do_stmt: DO stmt WHILE '(' expr ')'
        ;
 for_stmt: FOR for_expr stmt
         ;
-for_expr: '(' init_clause ';' expr ';' expr ')'
-        | '(' init_clause ';' expr ';' ')'
-        | '(' init_clause ';' ';' expr ')'
-        | '(' init_clause ';' ';' ')'
-        | '(' ';' expr ';' expr ')'
-        | '(' ';' expr ';' ')'
-        | '(' ';' ';' expr ')'
-        | '(' ';' ';'  ')'
+for_expr: '(' init_clause ';' expr ';' expr ')' {
+			$$ = new_node(AST_FOR);
+			$$->u.nfor.init = $2;
+			$$->u.nfor.cond = $4;
+			$$->u.nfor.inc = $6;
+		}
+        | '(' init_clause ';' expr ';' ')' {
+			$$ = new_node(AST_FOR);
+			$$->u.nfor.init = $2;
+			$$->u.nfor.cond = $4;
+			$$->u.nfor.inc = NULL;
+		}
+        | '(' init_clause ';' ';' expr ')' {
+			$$ = new_node(AST_FOR);
+			$$->u.nfor.init = $2;
+			$$->u.nfor.cond = NULL;
+			$$->u.nfor.inc = $5;
+		}
+        | '(' init_clause ';' ';' ')' {
+			$$ = new_node(AST_FOR);
+			$$->u.nfor.init = $2;
+			$$->u.nfor.cond = NULL;
+			$$->u.nfor.inc = NULL;
+		}
+        | '(' ';' expr ';' expr ')' {
+			$$ = new_node(AST_FOR);
+			$$->u.nfor.init = NULL;
+			$$->u.nfor.cond = $3;
+			$$->u.nfor.inc = $5;
+		}
+        | '(' ';' expr ';' ')' {
+			$$ = new_node(AST_FOR);
+			$$->u.nfor.init = NULL;
+			$$->u.nfor.cond = $3;
+			$$->u.nfor.inc = NULL;
+		}
+        | '(' ';' ';' expr ')' {
+			$$ = new_node(AST_FOR);
+			$$->u.nfor.init = NULL;
+			$$->u.nfor.cond = NULL;
+			$$->u.nfor.inc = $4;
+		}
+        | '(' ';' ';'  ')' {
+			$$ = new_node(AST_FOR);
+			$$->u.nfor.init = NULL;
+			$$->u.nfor.cond = NULL;
+			$$->u.nfor.inc = NULL;
+		}
         ;
 init_clause: expr
            | decl
@@ -465,12 +660,23 @@ break_stmt: BREAK ';'
           ;
 cont_stmt: CONTINUE ';'
          ;
-ret_stmt: RETURN expr ';'
-        | RETURN ';'
+ret_stmt: RETURN expr ';' {
+			$$ = new_node(AST_RET);
+			$$->u.ret.retval = $2;
+		}
+        | RETURN ';' {
+			$$ = new_node(AST_RET);
+		}
         ;
-goto_stmt: GOTO named_label ';'
+goto_stmt: GOTO named_label ';' {
+			$$ = new_node(AST_GOTO);
+			$$->u.ngoto.label = $2;
+		 }
          ;
-named_label: IDENT
+named_label: IDENT {
+			$$ = new_node(AST_IDENT);
+			$$->u.ident.name = $1;
+		   }
            ;
 null_stmt: ';'
          ;
